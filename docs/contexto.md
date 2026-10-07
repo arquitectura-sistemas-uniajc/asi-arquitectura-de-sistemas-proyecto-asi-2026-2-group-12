@@ -11,3 +11,10 @@ Estudiantes. Son los más expuestos: si la plataforma se cae o se pone lenta en 
 Docentes. Reciben los reclamos, tienen que decidir si anulan o repiten la evaluación y no pueden cerrar notas mientras tanto.
 Coordinadores académicos. Responden por la validez de la evaluación: les toca reprogramar a un curso completo y se quedan sin resultados consolidados.
 La institución. No usa la plataforma, pero paga la factura de una infraestructura que pasa 164 horas a la semana sin uso.
+
+## 3. ¿Qué pasa si el sistema se cae una hora?
+
+Depende de cuál hora.
+
+Fuera del examen (164 de las 168 horas): casi nada. Alguien no puede descargar un material o consultar un resultado y vuelve más tarde. Nadie pierde una calificación.
+Durante el examen (4 horas a la semana): una hora es la mitad de la franja. Afecta a todo el curso al mismo tiempo y lo más probable es que haya que anular y repetir la evaluación. Si además se pierden respuestas ya enviadas, el daño no se puede deshacer.

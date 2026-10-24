@@ -55,6 +55,6 @@ RF-08. El sistema debe enviar notificaciones por correo confirmación de entrega
 
 - La API expone un máximo de 4 o 5 endpoints de negocio.
 - Toda la infraestructura debe poder recrearse desde código.
-- Un pico conocido: todos los estudiantes de un curso presentan el examen en la
-  misma franja de ~4 horas semanales (de 168 h).
-- Una respuesta enviada nunca debe perderse.
+- **Pico conocido:** 4 horas semanales de las 168 de la semana (≈2,4 % del
+  tiempo). La capacidad alta no debe pagarse las 168 horas.
+- **Durabilidad:** una respuesta enviada por un estudiante nunca debe perderse.

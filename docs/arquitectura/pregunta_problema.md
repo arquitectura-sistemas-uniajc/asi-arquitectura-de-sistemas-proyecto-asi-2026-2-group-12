@@ -1,11 +1,44 @@
-## ¿qué pasa si el sistema académico se demora o el correo se cae?
+# Preguntas problema de AulaViva
 
-Si el sistema académico se demora o el servicio de correo se cae, el impacto depende de si el diseño es síncrono o asíncrono.   
+## 1. ¿Qué pasa si el sistema académico se demora o el correo se cae?
 
-Si el diseño es síncrono (sin tolerancia a fallos): El sistema AulaViva se bloquea o colapsa. Los estudiantes no pueden ingresar al examen, las entregas se cancelan y el temporizador falla al intentar comunicarse con los servicios externos fuera de servicio.  
+(Lo que ya tienen escrito. Pregunta del C4 Nivel 1 de la clase.)
 
-Si el diseño es asíncrono (arquitectura correcta): No pasa nada crítico. 
+Mejoren esta sección agregando el detalle técnico:
+- Qué se guarda en Redis (matrícula pre-cargada) y por cuánto tiempo.
+- Qué va a la cola (notificaciones y envío de notas) y cuántos reintentos hace.
+- Qué parte del flujo queda síncrona (guardar la respuesta) y cuál asíncrona
+  (correo, sincronización de notas).
 
-Sistema académico: La información de matrícula se pre-carga localmente en caché antes del examen, y las notas se envían de vuelta en segundo plano cuando el sistema externo vuelva a estar disponible.   
+## 2. ¿El material pesado va en la base de datos o en almacenamiento de objetos? ¿Por qué?
 
-Servicio de correo: La notificación se guarda en una cola de mensajes en segundo plano y se reintenta enviar más tarde, permitiendo que el estudiante finalice y guarde su examen sin interrupciones.
+**Decisión:** almacenamiento de objetos. En la BD solo se guarda la referencia
+(URL, nombre, tamaño, curso).
+
+**Por qué:**
+- Los archivos pesados inflan la base de datos y encarecen los backups.
+- En el pico, muchas descargas simultáneas competirían con las conexiones que
+  necesita el examen.
+- El almacenamiento de objetos escala la descarga sin cargar la API ni la BD.
+
+## 3. ¿Escalado programado o reactivo? ¿Cuál sirve para un pico conocido?
+
+**Decisión:** escalado programado, con un margen reactivo de respaldo.
+
+**Por qué:**
+- El pico es predecible: se sabe el día y la hora del examen.
+- El escalado reactivo tarda minutos en responder y el pico llega de golpe.
+- Se levantan las réplicas antes del examen y se bajan al terminar, pagando
+  capacidad alta solo ~2,4 % del tiempo.
+
+## 4. Si la API cae justo cuando un estudiante envía su examen, ¿qué pasa?
+
+**Decisión:** la respuesta enviada nunca se pierde.
+
+**Mecanismos:**
+- Mínimo dos réplicas detrás de Nginx con verificación de salud.
+- El cliente guarda las respuestas localmente y reintenta el envío.
+- El envío es idempotente: cada respuesta lleva un identificador único y un
+  reintento no duplica el registro.
+- Se confirma al estudiante solo cuando la respuesta quedó escrita en la BD o
+  en la cola.

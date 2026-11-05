@@ -1,21 +1,14 @@
 services:
-  api1: &api
+  api:
     build: ./app
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_URL: redis://redis:6379/0
-      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
-    networks: [red_aplicacion, red_datos]
+    ports:
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_started
-    restart: unless-stopped
-
-  api2:
-    <<: *api
 
   postgres:
     image: postgres:16-alpine
@@ -23,42 +16,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks: [red_datos]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    networks: [red_aplicacion]
-    restart: unless-stopped
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    env_file: .env
-    networks: [red_aplicacion]
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:1.27-alpine
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./infra/nginx/certs:/etc/nginx/certs:ro
-    networks: [red_publica, red_aplicacion]
-    depends_on: [api1, api2]
-    restart: unless-stopped
-
-networks:
-  red_publica:
-  red_aplicacion:
-  red_datos:
-    internal: true
 
 volumes:
   pgdata:

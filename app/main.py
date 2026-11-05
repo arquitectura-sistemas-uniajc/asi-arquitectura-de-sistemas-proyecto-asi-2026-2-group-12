@@ -83,12 +83,19 @@ class RespuestaIn(BaseModel):
 
 @app.get("/health")
 def health():
+    # Liveness: solo dice que el proceso responde. La usa el ALB.
+    return {"status": "ok", "instancia": os.getenv("HOSTNAME", "local")}
+
+
+@app.get("/ready")
+def ready():
+    # Readiness: comprueba la base de datos. Útil para diagnóstico.
     try:
         with pool.connection() as conn:
             conn.execute("SELECT 1")
     except Exception:
         raise HTTPException(status_code=503, detail="bd no disponible")
-    return {"status": "ok", "instancia": os.getenv("HOSTNAME", "local")}
+    return {"status": "ok"}
 
 
 @app.get("/metrics")

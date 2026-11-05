@@ -1,13 +1,14 @@
-# Diagrama de despliegue
+# Diagrama de despliegue (AWS)
 
 
 ## Reglas de red
 
-| Red | Qué contiene | Acceso externo |
+| Capa | Qué contiene | Entrada permitida |
 |---|---|---|
-| `red_publica` | Nginx, aplicación web | Sí, solo puertos 80 y 443 |
-| `red_aplicacion` | API, trabajador, Redis, RabbitMQ | No |
-| `red_datos` (`internal: true`) | PostgreSQL, almacenamiento de objetos | No |
-| `red_observabilidad` | Prometheus, Grafana | Solo Grafana, con login |
+| ALB (subred pública) | Punto único de entrada | Internet, solo puerto 443 |
+| Tareas ECS (subred pública, SG propio) | API y trabajador | Solo desde el Security Group del ALB |
+| RDS y ElastiCache (subred privada) | Datos y caché | Solo desde el Security Group de las tareas |
 
-La BD solo es alcanzable desde la API y el trabajador. Eso es lo que el enunciado pide demostrar en el requisito de red segmentada.
+Las tareas van en subred pública con IP pública para **evitar el NAT Gateway**
+(se cobra por hora y consume créditos). Su Security Group no admite tráfico de
+internet, solo el del ALB. La base de datos no tiene ruta a internet.

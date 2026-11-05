@@ -11,23 +11,25 @@ temporizador falla al intentar comunicarse con los servicios externos.
 
 **Diseño asíncrono (arquitectura elegida):** no pasa nada crítico.
 
-- **Sistema académico:** la matrícula se pre-carga en Redis antes de la franja
-  de examen, con TTL [definir]. Durante el examen no se consulta en línea. Las
-  notas se envían de vuelta en segundo plano cuando el sistema externo vuelva
-  a estar disponible.
-- **Servicio de correo:** la notificación se guarda en una cola, un worker la
-  procesa y se reintenta con espera creciente. Los mensajes que agotan los
-  reintentos pasan a una cola de fallidos. El estudiante termina y guarda su
-  examen sin interrupciones.
+- **Sistema académico:** la matrícula se pre-carga en ElastiCache (Redis) antes
+  de la franja de examen, con TTL [definir]. Durante el examen no se consulta
+  en línea. Las notas se envían de vuelta en segundo plano cuando el sistema
+  externo vuelva a estar disponible.
+- **Servicio de correo:** la notificación se publica en una cola de Amazon SQS.
+  El trabajador de notificación la consume y, si el correo falla, el mensaje
+  vuelve a la cola y se reintenta; tras agotar los reintentos pasa a una cola
+  de mensajes fallidos. El estudiante termina y guarda su examen sin
+  interrupciones.
 
 **Qué es síncrono y qué asíncrono:**
 
 | Síncrono (el estudiante espera) | Asíncrono (en segundo plano) |
 |---|---|
-| Guardar la respuesta en PostgreSQL | Correo de confirmación y resultados |
+| Guardar la respuesta en RDS PostgreSQL | Correo de confirmación y resultados |
 | Validar sesión (JWT) y matrícula en caché | Sincronización de notas con el sistema académico |
 
-Ver [ADR-0004](adr/0004-integraciones-asincronas-con-cola.md).
+Ver [ADR-0004](adr/0004-integraciones-asincronas-con-cola.md) y
+[ADR-0005](adr/0005-rabbitmq-como-cola-de-mensajes.md).
 
 ## 2. ¿El material pesado va en la base de datos o en almacenamiento de objetos? ¿Por qué?
 

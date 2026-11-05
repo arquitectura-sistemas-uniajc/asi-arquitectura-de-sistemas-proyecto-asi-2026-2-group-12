@@ -1,26 +1,37 @@
-# ADR-0005: RabbitMQ como cola de mensajes
+# ADR-0005: Amazon SQS como cola de mensajes
 
 - **Estado:** Aceptada
-- **Fecha:** 2026-10-23
+- **Fecha:** 2026-11-04
 
 ## Contexto
-Correo y sincronización de notas deben procesarse en segundo plano sin bloquear
-al estudiante. Hace falta una cola con confirmación de entrega, reintentos y
-cola de mensajes fallidos. Redis ya se usa como caché de matrícula.
+Correo y sincronización de notas deben procesarse en segundo plano sin
+bloquear al estudiante. Hace falta una cola con reintentos y una cola de
+mensajes fallidos, sin operar un broker propio.
 
 ## Decisión
-Usar RabbitMQ como cola de mensajes, con colas durables, confirmación manual
-(ack) del consumidor y una dead-letter queue. Redis queda solo como caché.
+Usar Amazon SQS, cola estándar, con esta configuración:
+- Cola de mensajes fallidos (DLQ) con `maxReceiveCount` de 5.
+- `visibility timeout` mayor que el tiempo máximo de procesamiento de un
+  mensaje; si el trabajador falla, el mensaje reaparece y se reintenta.
+- Long polling de 20 s en el trabajador, para reducir llamadas vacías.
+- Alarma de CloudWatch sobre mensajes en la DLQ.
+- El trabajador es idempotente: SQS estándar entrega al menos una vez y puede
+  repetir un mensaje.
 
 ## Alternativas descartadas
-- **Redis como cola (listas o streams):** menos piezas, pero mezcla caché y
-  cola en un mismo componente: una caída o un vaciado del caché podría afectar
-  los mensajes pendientes. Las garantías de entrega y la dead-letter queue
-  requieren más trabajo propio.
-- **Llamadas síncronas a los sistemas externos:** bloquean el examen (ADR-0004).
+- **Amazon MQ (RabbitMQ administrado):** funciona, pero el broker se cobra por
+  hora y consume créditos aunque no haya mensajes.
+- **Redis como cola:** mezcla caché y cola; un vaciado del caché afectaría los
+  mensajes pendientes.
+- **SQS FIFO:** da orden y entrega exacta, pero con menor rendimiento; el
+  orden no es un requisito aquí.
+- **Llamadas síncronas a los externos:** bloquean el examen (ADR-0004).
 
 ## Consecuencias
-- (+) Mensajes durables con ack y reintentos nativos.
+- (+) Sin servidores que operar; cobro por uso y capa gratuita mensual amplia.
 - (+) Caché y cola fallan de forma independiente.
-- (-) Un contenedor más que operar y monitorear (tamaño de cola, fallidos).
-- (-) Más consumo de memoria en el host.
+- (-) Entrega al menos una vez: puede haber duplicados, por eso el trabajador
+  debe tolerarlos.
+- (-) El orden de los mensajes no está garantizado.
+- (-) No hay espera creciente nativa entre reintentos; se controla ajustando
+  el `visibility timeout` desde el trabajador.

@@ -1,0 +1,59 @@
+# Compose = el diagrama de despliegue de AulaViva, escrito y ejecutable.
+# Tres redes, igual que las tres capas de subredes de una VPC:
+#   publica    -> solo el proxy (equivale a la subred publica, con salida a internet)
+#   aplicacion -> proxy y API   (subred privada de aplicacion)
+#   datos      -> API y base    (subred privada de datos)
+# "internal: true" quita la ruta hacia afuera: es la diferencia entre publica y privada.
+services:
+  proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      # El UNICO puerto publicado. Local: 8080. En EC2 se pone PUERTO_WEB=80 en el .env.
+      - "${PUERTO_WEB:-8080}:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./src/web:/usr/share/nginx/html:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [publica, aplicacion]
+
+  api:
+    build: ./src/api
+    image: aulaviva-api:1.0
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://app:${DB_PASSWORD:?Defina DB_PASSWORD en el archivo .env}@db:5432/aulaviva
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [aplicacion, datos]
+    # Sin "ports": la API no se publica. Solo el proxy llega a ella.
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en el archivo .env}
+      POSTGRES_DB: aulaviva
+    volumes:
+      - datos:/var/lib/postgresql/data
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d aulaviva"]
+      interval: 5s
+      retries: 10
+    networks: [datos]
+    # Sin "ports": la base de datos no existe para nadie fuera de la red "datos".
+
+networks:
+  publica:
+  aplicacion:
+    internal: true
+  datos:
+    internal: true
+
+volumes:
+  datos:

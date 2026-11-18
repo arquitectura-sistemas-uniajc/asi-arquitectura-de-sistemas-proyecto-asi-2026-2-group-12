@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cargando…</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor cabecera__fila">
+      <div class="logo"><span id="inicial" class="logo__inicial"></span><span id="marca" class="logo__nombre"></span></div>
+      <span id="salud" class="salud">Conectando…</span>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <section class="portada">
+      <p id="dominio" class="rotulo"></p>
+      <h1 id="lema"></h1>
+    </section>
+
+    <section class="kpis">
+      <article class="kpi"><span id="k-items"></span><strong id="v-items">–</strong></article>
+      <article class="kpi"><span id="k-total"></span><strong id="v-total">–</strong></article>
+      <article class="kpi"><span id="k-registros"></span><strong id="v-registros">–</strong></article>
+    </section>
+
+    <div class="rejilla">
+      <section class="tarjeta">
+        <h2 id="titulo-items"></h2>
+        <div class="tabla-scroll">
+          <table>
+            <thead><tr><th id="col-nombre"></th><th id="col-detalle"></th><th id="col-categoria"></th><th id="col-cantidad" class="num"></th></tr></thead>
+            <tbody id="tabla"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="columna">
+        <section class="tarjeta">
+          <h2 id="titulo-accion"></h2>
+          <form id="formulario">
+            <label><span id="lbl-item"></span><select id="item" required></select></label>
+            <label><span id="lbl-persona"></span><input id="persona" required maxlength="80" autocomplete="off" /></label>
+            <label id="campo-monto" hidden><span id="lbl-monto"></span><input id="monto" type="number" step="any" /></label>
+            <button id="boton" type="submit"></button>
+            <p id="nota-anonimo" class="nota" hidden>El registro guarda quién participó, pero no por cuál opción.</p>
+            <p id="aviso" class="aviso" role="status"></p>
+          </form>
+        </section>
+
+        <section class="tarjeta">
+          <h2 id="titulo-registros"></h2>
+          <ul id="registros" class="lista"></ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">Navegador → <strong>Nginx</strong> (único puerto público) → <strong>API</strong> (red interna) → <strong>PostgreSQL</strong> (red interna)</div>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

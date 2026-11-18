@@ -1,0 +1,25 @@
+{
+  "grupo": 1,
+  "slug": "aulaviva",
+  "nombre": "AulaViva",
+  "dominio": "Plataforma educativa con evaluaciones en línea",
+  "lema": "Cada evaluación con su cupo, sin caídas el día del parcial.",
+  "color": "#5b3fa8",
+  "recurso": {
+    "plural": "Evaluaciones",
+    "singular": "Evaluación",
+    "nombre": "Evaluación",
+    "detalle": "Horario",
+    "categoria": "Asignatura",
+    "cantidad": "Cupos libres"
+  },
+  "accion": {
+    "boton": "Inscribirme",
+    "plural": "Inscripciones",
+    "persona": "Estudiante",
+    "modo": "descontar",
+    "unico": false,
+    "anonimo": false,
+    "monto": null
+  }
+}
